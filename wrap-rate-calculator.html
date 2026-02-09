@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wrap Rate Calculator</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .screen-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .calculator-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            overflow: hidden;
+        }
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+        }
+        .tab:first-child {
+            border-top-left-radius: 8px;
+        }
+        .tab:last-child {
+            border-top-right-radius: 8px;
+        }
+        .tab.active {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .section-label {
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .base-rate-container, .cost-pools-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            align-self: center;
+            text-align: center;
+        }
+        .base-rate-container input {
+            width: 120px;
+            max-width: 150px;
+        }
+        .rate-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 250px;
+        }
+        .rate-inputs > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .rate-inputs label {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 5px;
+            font-weight: normal;
+        }
+        .rate-inputs input {
+            width: 80px;
+            max-width: 100px;
+        }
+        .calculate-btn {
+            width: 50%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+            align-self: center;
+        }
+        .calculate-btn:hover {
+            background-color: #0056b3;
+        }
+        .result-breakdown {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .result-summary {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .result-summary p {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .breakdown-grid div {
+            font-weight: normal;
+            text-align: left;
+        }
+        @media (max-width: 600px) {
+            .rate-inputs {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-container">
+        <div class="calculator-container">
+            <div class="tabs">
+                <div id="burdened-tab" class="tab active" onclick="switchTab('burdened')">
+                    Burdened Rate
+                </div>
+                <div id="unburdened-tab" class="tab" onclick="switchTab('unburdened')">
+                    Unburdened Rate
+                </div>
+            </div>
+
+            <div id="burdened-content" class="tab-content active">
+                <div class="input-group">
+                    <div class="base-rate-container">
+                        <div class="section-label">Base Hourly Rate</div>
+                        <input 
+                            type="number" 
+                            id="burdened-base-rate" 
+                            value="75.00"
+                            placeholder="Enter base hourly rate"
+                        >
+                    </div>
+                    <div class="cost-pools-container">
+                        <div class="section-label">Cost Pools</div>
+                        <div class="rate-inputs">
+                            <div>
+                                <label>Fringe (%)</label>
+                                <input 
+                                    type="number" 
+                                    id="fringe-rate" 
+                                    value="25"
+                                    placeholder="Fringe"
+                                >
+                            </div>
+                            <div>
+                                <label>Overhead (%)</label>
+                                <input 
+                                    type="number" 
+                                    id="overhead-rate" 
+                                    value="35"
+                                    placeholder="Overhead"
+                                >
+                            </div>
+                            <div>
+                                <label>G&A (%)</label>
+                                <input 
+                                    type="number" 
+                                    id="ga-rate" 
+                                    value="10"
+                                    placeholder="G&A"
+                                >
+                            </div>
+                            <div>
+                                <label>Fee/Profit (%)</label>
+                                <input 
+                                    type="number" 
+                                    id="profit-rate" 
+                                    value="10"
+                                    placeholder="Fee/Profit"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="calculate-btn" onclick="calculateBurdenedRate()">
+                    Calculate Burdened Rate
+                </button>
+                <div id="burdened-breakdown" class="result-breakdown">
+                    <p id="burdened-result"></p>
+                    <div id="burdened-details"></div>
+                </div>
+            </div>
+
+            <div id="unburdened-content" class="tab-content">
+                <div class="input-group">
+                    <div class="base-rate-container">
+                        <div class="section-label">Burdened Hourly Rate</div>
+                        <input 
+                            type="number" 
+                            id="unburdened-burdened-rate" 
+                            value="150.00"
+                            placeholder="Enter burdened hourly rate"
+                        >
+                    </div>
+                    <div class="cost-pools-container">
+                        <div class="section-label">Cost Pools</div>
+                        <div class="rate-inputs">
+                            <div>
+                                <label>Fringe (%)</label>
+                                <input 
+                                    type="number" 
+                                    id="unburdened-fringe-rate" 
+                                    value="25"
+                                    placeholder="Fringe"
+                                >
+                            </div>
+                            <div>
+                                <label>Overhead (%)</label>
+                                <input 
+                                    type="number" 
+                                    id="unburdened-overhead-rate" 
+                                    value="35"
+                                    placeholder="Overhead"
+                                >
+                            </div>
+                            <div>
+                                <label>G&A (%)</label>
+                                <input 
+                                    type="number" 
+                                    id="unburdened-ga-rate" 
+                                    value="10"
+                                    placeholder="G&A"
+                                >
+                            </div>
+                            <div>
+                                <label>Fee/Profit (%)</label>
+                                <input 
+                                    type="number" 
+                                    id="unburdened-profit-rate" 
+                                    value="10"
+                                    placeholder="Fee/Profit"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="calculate-btn" onclick="calculateUnburdenedRate()">
+                    Calculate Unburdened Rate
+                </button>
+                <div id="unburdened-breakdown" class="result-breakdown">
+                    <p id="unburdened-result"></p>
+                    <div id="unburdened-details"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs and remove active class
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab and add active class
+            document.getElementById(`${tabName}-content`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function calculateBurdenedRate() {
+            const baseRate = parseFloat(document.getElementById('burdened-base-rate').value);
+            const fringeRate = parseFloat(document.getElementById('fringe-rate').value) / 100;
+            const overheadRate = parseFloat(document.getElementById('overhead-rate').value) / 100;
+            const gaRate = parseFloat(document.getElementById('ga-rate').value) / 100;
+            const profitRate = parseFloat(document.getElementById('profit-rate').value) / 100;
+            const resultElement = document.getElementById('burdened-result');
+            const detailsElement = document.getElementById('burdened-details');
+
+            if (isNaN(baseRate) || isNaN(fringeRate) || isNaN(overheadRate) || isNaN(gaRate) || isNaN(profitRate)) {
+                resultElement.textContent = 'Please enter valid numbers';
+                resultElement.style.color = 'red';
+                return;
+            }
+
+            // Calculate each layer
+            let currentTotal = baseRate;
+            const fringeLayer = currentTotal * (1 + fringeRate);
+            const fringeIncrease = fringeLayer - currentTotal;
+            currentTotal = fringeLayer;
+
+            const overheadLayer = currentTotal * (1 + overheadRate);
+            const overheadIncrease = overheadLayer - currentTotal;
+            currentTotal = overheadLayer;
+
+            const gaLayer = currentTotal * (1 + gaRate);
+            const gaIncrease = gaLayer - currentTotal;
+            currentTotal = gaLayer;
+
+            const burdenedRate = currentTotal * (1 + profitRate);
+            const profitIncrease = burdenedRate - currentTotal;
+
+            // Calculate Wrap Rate
+            const wrapRate = burdenedRate / baseRate;
+
+            // Create result summary div
+            resultElement.innerHTML = `
+                <div class="result-summary">
+                    <p>Burdened Rate: $${burdenedRate.toFixed(2)} per hour</p>
+                    <p>Wrap Rate: ${wrapRate.toFixed(2)}x</p>
+                </div>
+            `;
+            resultElement.style.color = 'black';
+
+            // Detailed breakdown
+            detailsElement.innerHTML = `
+                <div class="breakdown-grid">
+                    <div>Base Rate: $${baseRate.toFixed(2)}</div>
+                    <div>+ Fringe (${(fringeRate * 100).toFixed(0)}%): $${fringeLayer.toFixed(2)} (+$${fringeIncrease.toFixed(2)})</div>
+                    <div>+ Overhead (${(overheadRate * 100).toFixed(0)}%): $${overheadLayer.toFixed(2)} (+$${overheadIncrease.toFixed(2)})</div>
+                    <div>+ G&A (${(gaRate * 100).toFixed(0)}%): $${gaLayer.toFixed(2)} (+$${gaIncrease.toFixed(2)})</div>
+                    <div>+ Fee/Profit (${(profitRate * 100).toFixed(0)}%): $${burdenedRate.toFixed(2)} (+$${profitIncrease.toFixed(2)})</div>
+                </div>
+            `;
+        }
+
+        function calculateUnburdenedRate() {
+            const burdenedRate = parseFloat(document.getElementById('unburdened-burdened-rate').value);
+            const fringeRate = parseFloat(document.getElementById('unburdened-fringe-rate').value) / 100;
+            const overheadRate = parseFloat(document.getElementById('unburdened-overhead-rate').value) / 100;
+            const gaRate = parseFloat(document.getElementById('unburdened-ga-rate').value) / 100;
+            const profitRate = parseFloat(document.getElementById('unburdened-profit-rate').value) / 100;
+            const resultElement = document.getElementById('unburdened-result');
+            const detailsElement = document.getElementById('unburdened-details');
+
+            if (isNaN(burdenedRate) || isNaN(fringeRate) || isNaN(overheadRate) || isNaN(gaRate) || isNaN(profitRate)) {
+                resultElement.textContent = 'Please enter valid numbers';
+                resultElement.style.color = 'red';
+                return;
+            }
+
+            // Reverse calculation
+            const totalMultiplier = (1 + profitRate) * (1 + gaRate) * (1 + overheadRate) * (1 + fringeRate);
+            const unburdenedRate = burdenedRate / totalMultiplier;
+
+            // Calculate each layer
+            let currentTotal = unburdenedRate;
+            const fringeLayer = currentTotal * (1 + fringeRate);
+            const fringeIncrease = fringeLayer - currentTotal;
+            currentTotal = fringeLayer;
+
+            const overheadLayer = currentTotal * (1 + overheadRate);
+            const overheadIncrease = overheadLayer - currentTotal;
+            currentTotal = overheadLayer;
+
+            const gaLayer = currentTotal * (1 + gaRate);
+            const gaIncrease = gaLayer - currentTotal;
+            currentTotal = gaLayer;
+
+            const finalBurdenedRate = currentTotal * (1 + profitRate);
+            const profitIncrease = finalBurdenedRate - currentTotal;
+
+            // Calculate Wrap Rate
+            const wrapRate = burdenedRate / unburdenedRate;
+
+            // Create result summary div
+            resultElement.innerHTML = `
+                <div class="result-summary">
+                    <p>Unburdened Rate: $${unburdenedRate.toFixed(2)} per hour</p>
+                    <p>Wrap Rate: ${wrapRate.toFixed(2)}x</p>
+                </div>
+            `;
+            resultElement.style.color = 'black';
+
+            // Detailed breakdown
+            detailsElement.innerHTML = `
+                <div class="breakdown-grid">
+                    <div>Base Rate: $${unburdenedRate.toFixed(2)}</div>
+                    <div>+ Fringe (${(fringeRate * 100).toFixed(0)}%): $${fringeLayer.toFixed(2)} (+$${fringeIncrease.toFixed(2)})</div>
+                    <div>+ Overhead (${(overheadRate * 100).toFixed(0)}%): $${overheadLayer.toFixed(2)} (+$${overheadIncrease.toFixed(2)})</div>
+                    <div>+ G&A (${(gaRate * 100).toFixed(0)}%): $${gaLayer.toFixed(2)} (+$${gaIncrease.toFixed(2)})</div>
+                    <div>+ Fee/Profit (${(profitRate * 100).toFixed(0)}%): $${finalBurdenedRate.toFixed(2)} (+$${profitIncrease.toFixed(2)})</div>
+                </div>
+            `;
+        }
+
+        // Initialize with first tab's calculation
+        calculateBurdenedRate();
+    </script>
+</body>
+</html>
